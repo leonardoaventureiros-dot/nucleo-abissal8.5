@@ -1,0 +1,99 @@
+NÚCLEO ABISSAL — COMO PUBLICAR (GitHub + Render)
+
+1) Suba estes arquivos na RAIZ de um repositório do GitHub (todos juntos, na mesma pasta):
+   index.html, server.js, arena-map.js, package.json, .gitignore e a PASTA audio/ inteira (mp3 + sfx-data.js)
+   (arena-map.js é NOVO e obrigatório: o servidor não inicia sem ele)
+
+2) No Render: New + > Web Service > conecte o repositório
+   - Runtime: Node
+   - Build Command: npm install
+   - Start Command: npm start
+   - Health Check Path (opcional): /health
+
+3) Quando terminar o deploy, abra a URL do Render (https://SEU-APP.onrender.com).
+   O jogo já abre apontando para o próprio servidor: MULTIPLAYER > CRIAR SALA.
+
+Se hospedar o index.html em outro lugar (ex.: GitHub Pages), edite no index.html:
+   const SERVER_URL='';   ->   const SERVER_URL='wss://SEU-APP.onrender.com';
+
+Obs.: no plano grátis do Render o servidor "dorme" após ~15 min sem uso; o primeiro acesso demora cerca de 1 minuto.
+
+CONTROLES NOVOS
+PC:     X agachar · E loja · C slide (3 cargas) · 1-7 armas · botão direito mira (Sniper: luneta)
+Mobile: botões AGACH., MIRA, LOJA e ⛶ (tela cheia) · empurre o analógico ao máximo para correr ·
+        o botão FOGO executa finalização quando houver alvo elegível mirado
+Todos os botões mobile podem ser movidos em: Menu > PERSONALIZAR CONTROLES MOBILE
+Opções > Sens. ao mirar (zoom), Sens. do toque e Contador de FPS.
+
+NOVIDADES (atualização avançada)
+Loja de suprimentos (corredor, lado direito): kits de vida +25/+60/+100, vida máxima, armadura, munição e recarga.
+Terminal de armas (corredor, lado esquerdo): melhorias específicas para cada uma das 7 armas, com efeito real nos números da arma.
+Use E (PC) ou o botão USAR (celular) perto da loja ou do terminal. Ambos usam as mesmas moedas.
+Estatísticas no canto inferior esquerdo (dano causado e eliminações). Modo espectador ao morrer.
+Obs.: loja e terminais funcionam no modo solo; no multiplayer ainda não.
+
+ATUALIZAÇÃO (correções e otimização — etapa 1)
+- Loja/terminal no PC: a tecla E abria e fechava a interface no mesmo toque (dois listeners no mesmo evento). Corrigido.
+- Mobile: o botão FOGO agora vira ATIRAR / EXECUTAR / INTERAGIR conforme a situação (o botão USAR separado foi removido).
+- Opções > Tamanho do HUD de combate (0.7x a 1.5x), salvo automaticamente.
+- Otimização: limpeza de inimigos removidos agora roda a cada 0,5 s (antes rodava todo frame durante 1 s a cada 2 s).
+
+ATUALIZAÇÃO (redesenho 3D dos inimigos)
+- Todos os 11 inimigos (Diabrete, Atirador, Bruto, Titã, Cacodemônio, Predador, Artilheiro, Ciberdemônio, Mente-Aranha, Barão, Ícone) ganharam modelos 3D novos, cada um com silhueta própria:
+  músculos, placas de armadura, chifres, espinhos, garras, dentes, ossos e peças mecânicas, com texturas procedurais de pele, osso, carne e metal.
+- Os chefes têm estruturas mais complexas (caixa torácica com núcleo ardente, chifres de carneiro, caudas, lança-foguetes, metralhadoras rotativas, halo de espinhos, asas de lâminas).
+- Animações novas: passada com peso (joelhos/cotovelos), balanço de tronco e quadril, cabeça que acompanha o jogador, preparação e recuo de golpes, reação a dano, atordoamento, pose de morte, caudas e tentáculos.
+- Passos de chefes grandes agora também dão um leve "afundar" da câmera (só posição vertical; mira e controle não são afetados). Respeita a opção de tremor de tela.
+- Caudas dos chefes recuam automaticamente quando há parede atrás, para não atravessar.
+- Hitboxes, colisões, IA, armas e dano ficaram intactos. Só o visual e a animação mudaram.
+- Desempenho: cada criatura é uma geometria mesclada (cache por tipo, sem recriar a cada spawn), ~1 a 3 mil triângulos por inimigo.
+
+ATUALIZAÇÃO — NOVO MODO MULTIPLAYER: ARENA (competitivo, até 4 jogadores)
+Criar sala > Modo: COOPERATIVO (igual ao de antes) ou ARENA. Na Arena escolha a duração: 5, 10, 15, 20 min ou tempo personalizado (1 a 60 min).
+- Todos contra todos, mapa exclusivo "Forja Abissal" (120x120) com pontes, pátio de contêineres, fundições e a Forja central.
+- Nascimentos: J1 canto sup. esquerdo, J2 sup. direito, J3 inf. esquerdo, J4 inf. direito (definidos pelo servidor).
+- Pontuação: eliminação = 100 pts (+25 se o golpe final for na cabeça). Desempate: mais pontos, depois mais eliminações; persistindo, mesma colocação.
+- Morreu? Reaparece em ~3 s em ponto distante dos adversários, com 2,5 s de proteção.
+- A cada 10 s o servidor gera suprimentos (vida, armadura, munição) em pontos válidos; máx. 10 no mapa. Quem chegar primeiro coleta e o item some para todos.
+- O servidor é a autoridade: cronômetro (relógio do aparelho não interfere), dano, linha de visão, cadência de tiro, eliminações, pontos e itens. O cliente só informa os acertos.
+- Fim da partida: tela escurece, HUD some, classificação (4º, 3º, 2º, 1º) com confetes para o 1º. VOLTAR AO LOBBY / JOGAR NOVAMENTE (host) sem recriar a sala.
+- Se um jogador sai, a partida segue (placar dele é mantido); se sobrar só 1, a partida termina. Se o host sai na Arena, outro jogador vira host.
+- Mínimo de 2 jogadores para iniciar a Arena.
+CORREÇÃO: no mobile, hud() usava uma variável fora de escopo (dt) e lançava erro todo quadro; corrigido.
+
+ATUALIZAÇÃO — CORREÇÕES, TELA DE MORTE E ÁUDIO PESADO
+PROGRESSÃO DAS SALAS: ao começar a sala seguinte, a porta da sala anterior SELA (fecha e trava) e não pode mais ser reaberta. Só sela quando
+  ninguém vivo (você e os aliados no coop) está na porta ou atrás dela, então nunca fecha sobre um jogador. Cada cliente aplica a mesma regra.
+  A saída da sala atual continua só abrindo quando todos os inimigos (inclusive os finais) morrem. Nova campanha reseta as selagens.
+TRAVAMENTO NO MOBILE (causa real): em aparelhos de toque, hud() usava a variável 'dt' fora de escopo e lançava erro a CADA QUADRO; o loop abortava
+  antes do render e a imagem congelava. Corrigido, e o loop agora é blindado (erro em um sistema não impede mais o desenho do quadro).
+  Também: joystick/mira presos são soltos ao abrir menu, morrer, perder o foco, trocar de aba, girar a tela ou cancelar o toque; toque novo
+  detecta ponteiro preso (captura perdida); perda/restauração de contexto WebGL tratada.
+TELA DE MORTE: 'VOCÊ MORREU' com flash, glitch RGB, interferência, sangue escorrendo e som próprio (queda grave, estática, batimentos).
+  No coop é uma versão translúcida que não bloqueia a visão da partida nem os botões do espectador. Animações só com transform/opacity (barato no celular).
+ÁUDIO: barramento mestre com compressor e realce de graves (sem estourar o volume), reverb para armas grandes e chefes, sons em camadas
+  (sub-grave + corpo + estalo + serra saturada + eco). Cada arma tem timbre próprio. Inimigos: voz com sub-grave, saturação e pan estéreo;
+  passos, queda de corpo, impacto de bola de fogo; chefes com vozes e mortes imponentes. Novo som de dano no jogador (grave, com limitador
+  anti-sobreposição). Tudo respeita o volume das Opções (volume 0 = silêncio).
+
+ATUALIZAÇÃO — NOVOS EFEITOS SONOROS + REVISÃO DA LOJA
+SERVIDOR: o server.js agora serve a pasta audio/ (antes qualquer /audio/... respondia 404, então as amostras nunca carregavam no Render e o jogo usava só os sons sintéticos).
+  Só serve arquivos .mp3/.ogg/.wav/.m4a/.js dentro de audio/ (sem sair da pasta). Faça o deploy do server.js junto com o index.html e a pasta audio/.
+NOVOS ÁUDIOS (audio/):
+  lanca_foguete.mp3   1º som do arquivo original = lançamento. Toca no disparo da arma 4 (LANÇA-FOGO RUBRO).
+  rocket_impacto.mp3  2º som do arquivo original = foguete atingindo o alvo (explosão própria do foguete, diferente de explosao.mp3). Toca quando o foguete
+                      do jogador (ou de outro jogador no coop) explode. Barris, estruturas e explosões de inimigos continuam com explosao.mp3.
+  demonio_dano.mp3    3º som do arquivo original = o demônio comum tomando dano. Só no Diabrete (imp), só no evento de dano, 1 vez a cada 450 ms por inimigo.
+  pisadas_boss.mp3    8 pisadas (1 s cada). Uma por passada dos CHEFES; chefes maiores usam as pisadas mais graves, com volume/tom conforme o tamanho e a distância.
+  dano.mp3            8 efeitos de dano (1,7 s cada). Escolhidos pelo tipo de golpe: projétil, corpo a corpo, golpe de chefe e perigo ambiental (lava). Dano de EXPLOSÃO não usa o som de dano (a explosão tem o próprio som).
+  soco.mp3            efeitos 1, 4, 5 e 6 do arquivo original (0,9 s cada). Leves: soco do jogador e garras de inimigos. Pesados: golpes de chefe/Bruto.
+  Opções > "Volume do som de dano" (padrão 0,35, salvo automaticamente) ajusta só o som de dano; o Volume geral continua valendo para tudo.
+LOJA (revisão): lógica de compras/terminais conferida e testada; reforços: toque/tecla que abre a loja não aciona botões por 0,3 s, botão INTERAGIR do celular abre
+  a loja mesmo logo após um soco, fechar a loja limpa tela/entradas/estado de pausa, pedido duplo de travamento do mouse eliminado, e uma trava de segurança
+  desfaz qualquer estado "loja aberta" inconsistente.
+
+
+CORREÇÃO — ÁUDIO EMBUTIDO NO index.html
+Os 12 áudios (antigos + novos) agora vão DENTRO do index.html (base64), então os sons funcionam mesmo que a pasta audio/ não chegue ao GitHub/Render
+ou que o servidor publicado seja uma versão antiga. A pasta audio/ + o server.js atualizado continuam no pacote como reserva, mas não são mais obrigatórios.
+Depois de subir o index.html novo, faça Ctrl+F5 (ou limpe o cache) para não carregar a versão antiga. O index.html agora tem ~950 KB.
